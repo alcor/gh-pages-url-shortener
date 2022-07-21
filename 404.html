@@ -40,9 +40,9 @@
         xhr.onload = function () {
           try {
             var payload = JSON.parse(xhr.response);
-            console.log({payload});
             var message = payload.message;
             var title = payload.body || payload.title;
+            console.log(message, title, payload);
 
             // Workaround IE 11 lack of support for new URL()
             var url = document.createElement("a");
