@@ -41,7 +41,7 @@
           try {
             var payload = JSON.parse(xhr.response);
             var message = payload.message;
-            var title = payload.body;
+            var title = payload.body || payload.title;
 
             // Workaround IE 11 lack of support for new URL()
             var url = document.createElement("a");
