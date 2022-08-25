@@ -21,19 +21,36 @@
           url
         );
       }
+      const base32 = {
+        alphabet: "ijklmnopqrstuv", // Replace i,l,o,u in js toString(32)
+        permuted: "jkmnpqrstvwxyz" + "ilo", // Correction for common errors (i,l,o)
+        reversed: "ijklmnopqrstuv" + "110",
+        encode: function (i) {
+          return i.toString(32).replace(new RegExp('[' + base32.alphabet + ']', 'g'),
+            function(c) { return base32.permuted.charAt(base32.alphabet.indexOf(c))})
+          },
+        decode: function (s) {
+          return parseInt(s.replace( new RegExp('[' + base32.permuted + ']', 'g'),
+            function(c) { return base32.reversed.charAt(base32.permuted.indexOf(c))}),
+          32)},
+      }
 
       function redirect() {
         var location = window.location;
         var issueNumber = location.pathname.split("/")[
           PATH_SEGMENTS_TO_SKIP + 1
         ];
+
+        issueNumber = base32.decode(issueNumber);
+
         var homepage =
           location.protocol +
           "//" +
           location.hostname +
           (location.port ? ":" + location.port : "") +
           "/" +
-          location.pathname.split("/")[PATH_SEGMENTS_TO_SKIP];
+          location.pathname.split("/")[PATH_SEGMENTS_TO_SKIP] +
+          "?" + issueNumber;
 
         var xhr = new XMLHttpRequest();
 
