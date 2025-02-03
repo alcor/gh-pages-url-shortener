@@ -26,32 +26,74 @@
         permuted: "jkmnpqrstvwxyz" + "ilo", // Correction for common errors (i,l,o)
         reversed: "ijklmnopqrstuv" + "110",
         encode: function (i) {
-          return i.toString(32).replace(new RegExp('[' + base32.alphabet + ']', 'g'),
-            function(c) { return base32.permuted.charAt(base32.alphabet.indexOf(c))})
-          },
+          return i
+            .toString(32)
+            .replace(
+              new RegExp("[" + base32.alphabet + "]", "g"),
+              function (c) {
+                return base32.permuted.charAt(base32.alphabet.indexOf(c));
+              }
+            );
+        },
         decode: function (s) {
-          return parseInt(s.replace( new RegExp('[' + base32.permuted + ']', 'g'),
-            function(c) { return base32.reversed.charAt(base32.permuted.indexOf(c))}),
-          32)},
-      }
+          return parseInt(
+            s.replace(
+              new RegExp("[" + base32.permuted + "]", "g"),
+              function (c) {
+                return base32.reversed.charAt(base32.permuted.indexOf(c));
+              }
+            ),
+            32
+          );
+        },
+      };
 
       function redirect() {
         var location = window.location;
-        var issueNumber = location.pathname.split("/")[
-          PATH_SEGMENTS_TO_SKIP + 1
-        ];
+        var searchTerm =
+          location.pathname.split("/")[PATH_SEGMENTS_TO_SKIP + 1];
 
-        issueNumber = base32.decode(issueNumber);
+        // Try to decode as base32 first
+        try {
+          var issueNumber = base32.decode(searchTerm);
+          findIssueByNumber(issueNumber);
+        } catch (e) {
+          // If decode fails, treat as a search term
+          findIssueByTitle(searchTerm);
+        }
+      }
 
-        var homepage =
-          location.protocol +
-          "//" +
-          location.hostname +
-          (location.port ? ":" + location.port : "") +
-          "/" +
-          location.pathname.split("/")[PATH_SEGMENTS_TO_SKIP] +
-          "?" + issueNumber;
+      function findIssueByTitle(searchTerm) {
+        var searchUrl =
+          "https://api.github.com/search/issues?q=repo:" +
+          GITHUB_ISSUES_LINK.split("/repos/")[1].split("/issues/")[0] +
+          "+title:" +
+          encodeURIComponent('"' + searchTerm + '"');
 
+        var searchXhr = new XMLHttpRequest();
+        searchXhr.onload = function () {
+          try {
+            var searchResults = JSON.parse(searchXhr.response);
+            if (searchResults.items && searchResults.items.length > 0) {
+              // Use the first matching issue
+              findIssueByNumber(searchResults.items[0].number);
+            } else {
+              location.replace(getHomepage());
+            }
+          } catch (e) {
+            location.replace(getHomepage());
+          }
+        };
+
+        searchXhr.onerror = function () {
+          location.replace(getHomepage());
+        };
+
+        searchXhr.open("GET", searchUrl);
+        searchXhr.send();
+      }
+
+      function findIssueByNumber(issueNumber) {
         var xhr = new XMLHttpRequest();
 
         xhr.onload = function () {
@@ -69,24 +111,36 @@
             var isInvalidUrl =
               message === "Not Found" ||
               !title ||
-//               !isUrl(title) ||
               url.hostname === location.hostname;
 
             if (isInvalidUrl) {
-              location.replace(homepage);
+              location.replace(getHomepage());
             } else {
               location.replace(title);
             }
           } catch (e) {
-            location.replace(homepage);
+            location.replace(getHomepage());
           }
         };
 
         xhr.onerror = function () {
-          location.replace(homepage);
+          location.replace(getHomepage());
         };
         xhr.open("GET", GITHUB_ISSUES_LINK + issueNumber);
         xhr.send();
+      }
+
+      function getHomepage() {
+        return (
+          location.protocol +
+          "//" +
+          location.hostname +
+          (location.port ? ":" + location.port : "") +
+          "/" +
+          location.pathname.split("/")[PATH_SEGMENTS_TO_SKIP] +
+          "?" +
+          issueNumber
+        );
       }
 
       redirect();
