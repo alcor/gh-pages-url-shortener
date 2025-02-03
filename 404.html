@@ -4,61 +4,28 @@
     <meta charset="utf-8" />
     <title>Redirecting...</title>
     <script>
-      /**
-       * Configuration goes here
-       */
       // Format: https://api.github.com/repos/{owner}/{repo}/issues/
       var GITHUB_ISSUES_LINK =
         "https://api.github.com/repositories/451475736/issues/";
       var PATH_SEGMENTS_TO_SKIP = 0;
 
-      /**
-       * DO NOT TOUCH ANYTHING BELOW THIS COMMENT UNLESS YOU KNOW WHAT YOU ARE DOING
-       */
       function isUrl(url) {
         // Regex from https://stackoverflow.com/a/3809435, with a modification to allow for TLDs of up to 24 characters
         return /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,24}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)+$/.test(
           url
         );
       }
-      const base32 = {
-        alphabet: "ijklmnopqrstuv", // Replace i,l,o,u in js toString(32)
-        permuted: "jkmnpqrstvwxyz" + "ilo", // Correction for common errors (i,l,o)
-        reversed: "ijklmnopqrstuv" + "110",
-        encode: function (i) {
-          return i
-            .toString(32)
-            .replace(
-              new RegExp("[" + base32.alphabet + "]", "g"),
-              function (c) {
-                return base32.permuted.charAt(base32.alphabet.indexOf(c));
-              }
-            );
-        },
-        decode: function (s) {
-          return parseInt(
-            s.replace(
-              new RegExp("[" + base32.permuted + "]", "g"),
-              function (c) {
-                return base32.reversed.charAt(base32.permuted.indexOf(c));
-              }
-            ),
-            32
-          );
-        },
-      };
 
       function redirect() {
         var location = window.location;
         var searchTerm =
           location.pathname.split("/")[PATH_SEGMENTS_TO_SKIP + 1];
 
-        // Try to decode as base32 first
-        try {
-          var issueNumber = base32.decode(searchTerm);
-          findIssueByNumber(issueNumber);
-        } catch (e) {
-          // If decode fails, treat as a search term
+        // Check if searchTerm is a number
+        if (!isNaN(searchTerm) && searchTerm.trim() !== "") {
+          findIssueByNumber(parseInt(searchTerm));
+        } else {
+          // If not a number, treat as a search term
           findIssueByTitle(searchTerm);
         }
       }
