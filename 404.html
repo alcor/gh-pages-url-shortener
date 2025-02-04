@@ -37,8 +37,8 @@
         var searchUrl =
           "https://api.github.com/search/issues?q=repo:" +
           GITHUB_REPO +
-          "+title:" +
-          encodeURIComponent('"' + searchTerm + '"');
+          "+in:title+" +
+          encodeURIComponent(searchTerm);
 
         console.log(searchUrl);
 
@@ -47,8 +47,16 @@
           try {
             var searchResults = JSON.parse(searchXhr.response);
             if (searchResults.items && searchResults.items.length > 0) {
-              // Use the first matching issue
-              findIssueByNumber(searchResults.items[0].number);
+              // Find the first issue with an exact title match
+              var exactMatch = searchResults.items.find(function (item) {
+                return item.title.toLowerCase() === searchTerm.toLowerCase();
+              });
+
+              if (exactMatch) {
+                findIssueByNumber(exactMatch.number);
+              } else {
+                console.log("No exact title matches found");
+              }
             } else {
               console.log("No matching issues found");
             }
