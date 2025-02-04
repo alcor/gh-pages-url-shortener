@@ -48,15 +48,15 @@
               // Use the first matching issue
               findIssueByNumber(searchResults.items[0].number);
             } else {
-              location.replace(getHomepage());
+              console.log("No matching issues found");
             }
           } catch (e) {
-            location.replace(getHomepage());
+            console.log("Error parsing search results:", e);
           }
         };
 
         searchXhr.onerror = function () {
-          location.replace(getHomepage());
+          console.log("Error searching for issues");
         };
 
         searchXhr.open("GET", searchUrl);
@@ -84,33 +84,20 @@
               url.hostname === location.hostname;
 
             if (isInvalidUrl) {
-              location.replace(getHomepage());
+              console.log("Invalid URL or issue not found");
             } else {
               location.replace(title);
             }
           } catch (e) {
-            location.replace(getHomepage());
+            console.log("Error parsing issue data:", e);
           }
         };
 
         xhr.onerror = function () {
-          location.replace(getHomepage());
+          console.log("Error fetching issue");
         };
         xhr.open("GET", GITHUB_ISSUES_LINK + issueNumber);
         xhr.send();
-      }
-
-      function getHomepage() {
-        return (
-          location.protocol +
-          "//" +
-          location.hostname +
-          (location.port ? ":" + location.port : "") +
-          "/" +
-          location.pathname.split("/")[PATH_SEGMENTS_TO_SKIP] +
-          "?" +
-          issueNumber
-        );
       }
 
       redirect();
