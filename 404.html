@@ -40,6 +40,8 @@
           "+title:" +
           encodeURIComponent('"' + searchTerm + '"');
 
+        console.log(searchUrl);
+
         var searchXhr = new XMLHttpRequest();
         searchXhr.onload = function () {
           try {
